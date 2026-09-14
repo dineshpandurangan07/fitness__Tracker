@@ -1,0 +1,21 @@
+{
+  "name": "fitness-and-workout-tracker",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Modern Fitness & Workout Tracker - Full Stack Application",
+  "scripts": {
+    "dev": "npm --prefix backend run dev & npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "setup": "npm run install:all && npm run build"
+  },
+  "dependencies": {
+    "serverless-http": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
