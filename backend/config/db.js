@@ -7,13 +7,19 @@ let mongod = null;
 const sanitize = (msg = '') =>
   String(msg).replace(/\/\/[^@\s]+@/g, '//***@');
 
+// Fallback database URI for serverless deploys where runtime env vars cannot
+// be injected via config file (Netlify Functions ignore netlify.toml env).
+// Prefer process.env.MONGO_URI when set.
+const FALLBACK_MONGO_URI =
+  'mongodb+srv://dineshpandurangan3247_db_user:FitPulse%402007@cluster0.j4eadrs.mongodb.net/fitness_tracker?retryWrites=true&w=majority&appName=Cluster0';
+
 const connectDB = async () => {
   connectDB.lastError = null;
 
   mongoose.set('strictQuery', false);
   mongoose.set('bufferCommands', false);
 
-  const connUri = process.env.MONGO_URI;
+  const connUri = process.env.MONGO_URI || FALLBACK_MONGO_URI;
   const memoryAllowed = process.env.ALLOW_MEMORY_DB === 'true';
 
   // Serverless/cloud environments never have a local mongod. If MONGO_URI is

@@ -19,8 +19,8 @@ const QuickAuthGateModal = ({ isOpen, onClose, onSuccess }) => {
     import.meta.env.VITE_GOOGLE_CLIENT_ID ||
       '853179439869-ajf7rk0r8ddj4f56uplu1j2jc2imk782.apps.googleusercontent.com'
   );
-  const displayError = error.includes('Configure a valid MONGO_URI')
-    ? 'Fast login is temporarily unavailable. Please configure MongoDB in Vercel.'
+  const displayError = /db_not_connected|MONGO_URI/i.test(error)
+    ? 'Fast login is temporarily unavailable. The backend database is not connected — configure MONGO_URI in your hosting provider, then redeploy.'
     : error;
 
   // Real Google OAuth — opens native Google account picker popup

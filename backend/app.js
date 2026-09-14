@@ -25,17 +25,32 @@ const statsRoutes = require('./routes/statsRoutes');
 const app = express();
 
 // CORS - production frontend + localhost development
+const allowedOrigins = [
+  'https://fitness-tracker-oqud.vercel.app',
+  'https://strong-churros-728ed1.netlify.app',
+  'https://dineshpandurangan07.github.io',
+];
+const allowedOriginPatterns = [
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/i,
+  /^https:\/\/[a-z0-9-]+\.netlify\.app$/i,
+  /^https:\/\/[a-z0-9-]+\.github\.io$/i,
+  /^http:\/\/localhost:\d+$/,
+  /^http:\/\/127\.0\.0\.1:\d+$/,
+];
+
+function isOriginAllowed(origin) {
+  if (!origin) return false;
+  if (allowedOrigins.includes(origin)) return true;
+  return allowedOriginPatterns.some((pattern) => pattern.test(origin));
+}
+
 app.use(
   cors({
-    origin: [
-      'https://fitness-tracker-oqud.vercel.app',
-      'https://strong-churros-728ed1.netlify.app',
-      /^https:\/\/.*\.vercel\.app$/,
-      /^https:\/\/.*\.netlify\.app$/,
-      /^https:\/\/[^/]+\.github\.io$/,
-      /^http:\/\/localhost:\d+$/,
-      /^http:\/\/127\.0\.0\.1:\d+$/,
-    ],
+    origin(origin, callback) {
+      // Allow non-browser requests (curl, Postman, server-to-server) that omit Origin
+      if (!origin) return callback(null, true);
+      callback(null, isOriginAllowed(origin));
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
