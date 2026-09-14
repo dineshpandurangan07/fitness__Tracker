@@ -3,50 +3,50 @@ const mongoose = require('mongoose');
 let mongod = null;
 
 const connectDB = async () => {
-  try {
-    const connUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/fitness_tracker';
+  mongoose.set('strictQuery', false);
+  mongoose.set('bufferCommands', false);
 
-    mongoose.set('strictQuery', false);
-    mongoose.set('bufferCommands', false);
+  const connUri = process.env.MONGO_URI;
+  const memoryAllowed = process.env.ALLOW_MEMORY_DB === 'true';
 
-    let primaryErr;
+  // Serverless/cloud environments never have a local mongod. If MONGO_URI is
+  // missing and we are not explicitly running the dev in-memory fallback,
+  // fail fast with a message that points at the real fix instead of waiting
+  // on a localhost timeout.
+  if (!connUri && !memoryAllowed) {
+    throw new Error(
+      'MONGO_URI is not configured. Set the MONGO_URI environment variable (e.g. a MongoDB Atlas connection string) in your hosting environment, then redeploy.'
+    );
+  }
 
+  if (connUri) {
     try {
-      // Short timeout in dev so we fall back quickly if local mongod is not active.
-      // Longer timeout in production (serverless cold starts / Atlas latency).
-      const timeout = process.env.NODE_ENV === 'production' ? 10000 : 3000;
+      const isProd = process.env.NODE_ENV === 'production';
       const conn = await mongoose.connect(connUri, {
-        serverSelectionTimeoutMS: timeout,
-        maxPoolSize: process.env.NODE_ENV === 'production' ? 5 : 10,
+        serverSelectionTimeoutMS: isProd ? 15000 : 3000,
+        maxPoolSize: isProd ? 5 : 10,
         retryWrites: true,
       });
       console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
       return;
     } catch (error) {
-      primaryErr = error;
-      console.warn(`Standard MongoDB connection to ${connUri} failed: ${primaryErr.message}`);
-
-      if (process.env.NODE_ENV === 'production') {
-        throw primaryErr;
-      }
-
-      console.log('Attempting in-memory MongoDB fallback for local development...');
+      console.warn(`MongoDB connection to configured URI failed: ${error.message}`);
+      if (!memoryAllowed) throw error;
+      console.log('Falling back to in-memory MongoDB (local development only).');
     }
+  }
 
-    // In-memory fallback for local development only (never in production).
-    try {
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      mongod = await MongoMemoryServer.create();
-      const memoryUri = mongod.getUri();
-      const conn = await mongoose.connect(memoryUri, { maxPoolSize: 10 });
-      console.log(`In-Memory MongoDB Connected successfully: ${memoryUri}`);
-    } catch (memErr) {
-      console.error('Failed to initialize In-Memory MongoDB:', memErr.message);
-      throw memErr;
-    }
-  } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    throw error;
+  // In-memory fallback for local development only. Never reached in the cloud
+  // because ALLOW_MEMORY_DB is only set in the local backend/.env file.
+  try {
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    mongod = await MongoMemoryServer.create();
+    const memoryUri = mongod.getUri();
+    const conn = await mongoose.connect(memoryUri, { maxPoolSize: 10 });
+    console.log(`In-Memory MongoDB Connected successfully: ${memoryUri}`);
+  } catch (memErr) {
+    console.error('Failed to initialize In-Memory MongoDB:', memErr.message);
+    throw memErr;
   }
 };
 

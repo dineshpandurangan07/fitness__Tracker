@@ -43,12 +43,19 @@ app.use(
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
+// Health check endpoint. `env` only reports the presence of each variable
+// (never its value) so we can diagnose deployment problems instantly.
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     api: 'fitness-tracker',
     db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    env: {
+      mongoUri: Boolean(process.env.MONGO_URI),
+      jwtSecret: Boolean(process.env.JWT_SECRET),
+      nodeEnv: process.env.NODE_ENV || 'not-set',
+      allowMemoryDb: process.env.ALLOW_MEMORY_DB === 'true',
+    },
     timestamp: new Date().toISOString(),
   });
 });
@@ -57,9 +64,13 @@ app.get('/api/health', (req, res) => {
 app.use('/api', (req, res, next) => {
   if (req.path === '/health') return next();
   if (mongoose.connection.readyState !== 1) {
+    const missing = !process.env.MONGO_URI;
     return res.status(503).json({
       success: false,
-      message: 'Database is not connected yet. If you just deployed, check that MONGO_URI is configured and wait a few seconds.',
+      error: 'db_not_connected',
+      message: missing
+        ? 'Database is not connected: the MONGO_URI environment variable is not configured. Add MONGO_URI (and JWT_SECRET) in your hosting environment under Settings -> Environment variables, then redeploy.'
+        : 'Database is not connected yet. MONGO_URI is set but the connection is still establishing or failed. Check the MongoDB Atlas connection string and that network access allows this host, then wait a few seconds and retry.',
     });
   }
   next();
