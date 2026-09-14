@@ -60,18 +60,14 @@ VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 
 ## Deployment (Vercel - recommended)
 
-The repo is preconfigured for Vercel (`vercel.json`). The Express API and the
-React SPA share one domain, so relative `/api` requests work with zero CORS
-issues and no `VITE_API_URL` required.
+The repo uses a **multi-service** Vercel setup: the React SPA (`frontend/`) and the
+Express API (`backend/`) are deployed together on one domain. Relative `/api`
+requests are rewritten to the backend service — zero CORS issues, no
+`VITE_API_URL` required.
 
 1. Push to GitHub and **Import** the repo into Vercel.
-2. Use these project settings:
-   ```
-   Root Directory:   .                 (repo root, NOT frontend/)
-   Build Command:    npm --prefix frontend run build
-   Output Directory: frontend/dist
-   Install Command:  npm --prefix backend install && npm --prefix frontend install
-   ```
+2. Vercel auto-detects the two services (`Vite` frontend + `Express` backend).
+   Confirm the preset shown by Vercel matches the root `vercel.json` services.
 3. Add these environment variables (Production / Preview / Development):
    ```
    MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/fitness_tracker
@@ -80,31 +76,31 @@ issues and no `VITE_API_URL` required.
    GOOGLE_CLIENT_ID=<google-client-id>          (optional)
    VITE_GOOGLE_CLIENT_ID=<google-client-id>     (optional)
    ```
-4. Deploy. First request warms up the API (MongoDB Atlas connection).
+4. Deploy.
 
 > `MONGO_URI` **must** point to a real MongoDB (MongoDB Atlas free tier works
 > great). The in-memory fallback is disabled in production by design.
 
 ## Deployment (Netlify)
 
-`netlify.toml` builds the frontend. For the API, host the backend separately
-(serverless function or a VPS) and set `VITE_API_URL` at build time to its URL.
+`netlify.toml` builds the frontend as a static SPA. For a full-stack site on
+Netlify, host the Express API separately (Netlify Functions or a VPS) and set
+`VITE_API_URL` at build time to its URL.
 
 ## Project Structure
 
 ```
 .
-├── api/index.js          # Vercel serverless handler (Express entry)
-├── backend/              # Express REST API
+├── backend/              # Express REST API (deployed as a Vercel service)
 │   ├── config/db.js      # MongoDB connection (+ dev in-memory fallback)
 │   ├── controllers/      # Route handlers
 │   ├── models/           # Mongoose schemas
 │   ├── routes/           # API routes
 │   └── utils/            # Seed data (exercises + demo user)
-├── frontend/             # React + Vite SPA
+├── frontend/             # React + Vite SPA (deployed as a Vercel service)
 │   ├── src/              # Components, pages, contexts, services
 │   └── public/           # Static assets
-├── vercel.json           # Vercel build/route config
+├── vercel.json           # Vercel multi-service config + rewrites/headers
 ├── netlify.toml          # Netlify build/route config
 └── package.json          # Root scripts (dev/build/install)
 ```
