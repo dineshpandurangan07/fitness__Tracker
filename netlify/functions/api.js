@@ -25,6 +25,7 @@ function normalizePath(p) {
 exports.handler = async (event, context) => {
   event.path = normalizePath(event.path);
   try {
+    await initializeApp();
     return await wrapped(event, context);
   } catch (error) {
     console.error('[netlify] unhandled error:', error);

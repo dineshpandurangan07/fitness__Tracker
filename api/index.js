@@ -28,6 +28,7 @@ function normalizeUrl(rawUrl) {
 
 module.exports = async function handler(vercelReq, vercelRes) {
   try {
+    await initializeApp();
     vercelReq.url = normalizeUrl(vercelReq.url);
     app(vercelReq, vercelRes);
   } catch (error) {
