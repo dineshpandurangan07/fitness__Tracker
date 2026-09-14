@@ -32,6 +32,7 @@ app.use(
       'https://strong-churros-728ed1.netlify.app',
       /^https:\/\/.*\.vercel\.app$/,
       /^https:\/\/.*\.netlify\.app$/,
+      /^https:\/\/[^/]+\.github\.io$/,
       /^http:\/\/localhost:\d+$/,
       /^http:\/\/127\.0\.0\.1:\d+$/,
     ],
