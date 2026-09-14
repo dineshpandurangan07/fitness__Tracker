@@ -10,7 +10,6 @@ const sanitize = (msg = '') =>
 const connectDB = async () => {
   connectDB.lastError = null;
 
-const connectDB = async () => {
   mongoose.set('strictQuery', false);
   mongoose.set('bufferCommands', false);
 
@@ -53,11 +52,11 @@ const connectDB = async () => {
     const memoryUri = mongod.getUri();
     const conn = await mongoose.connect(memoryUri, { maxPoolSize: 10 });
     console.log(`In-Memory MongoDB Connected successfully: ${memoryUri}`);
-} catch (memErr) {
-      connectDB.lastError = sanitize(memErr.message);
-      console.error('Failed to initialize In-Memory MongoDB:', connectDB.lastError);
-      throw memErr;
-    }
+  } catch (memErr) {
+    connectDB.lastError = sanitize(memErr.message);
+    console.error('Failed to initialize In-Memory MongoDB:', connectDB.lastError);
+    throw memErr;
+  }
 };
 
 module.exports = connectDB;
