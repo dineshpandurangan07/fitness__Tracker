@@ -29,7 +29,9 @@ app.use(
   cors({
     origin: [
       'https://fitness-tracker-oqud.vercel.app',
+      'https://strong-churros-728ed1.netlify.app',
       /^https:\/\/.*\.vercel\.app$/,
+      /^https:\/\/.*\.netlify\.app$/,
       /^http:\/\/localhost:\d+$/,
       /^http:\/\/127\.0\.0\.1:\d+$/,
     ],

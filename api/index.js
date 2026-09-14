@@ -5,9 +5,7 @@
 // native http.IncomingMessage / http.ServerResponse objects, so Express can be
 // used directly — body parsing, routing, and responses work exactly as locally.
 
-const path = require('path');
-
-const { app, initializeApp } = require(path.join(__dirname, '..', 'backend', 'app'));
+const { app, initializeApp } = require('../backend/app');
 
 // Warm the database in the background. The app's /api middleware returns a
 // clear HTTP 503 until the connection is established, and the cached promise
