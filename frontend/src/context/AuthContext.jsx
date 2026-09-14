@@ -62,7 +62,18 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: false, message: res.data.message || 'Google authentication failed' };
     } catch (error) {
-      const message = error.response?.data?.message || 'Google Sign-In failed';
+      const backendMessage = error.response?.data?.message;
+      const status = error.response?.status;
+      let message;
+      if (backendMessage) {
+        message = backendMessage;
+      } else if (!error.response) {
+        message = 'Cannot reach the server. Check your internet connection and try again.';
+      } else if (status === 503) {
+        message = 'Server database is starting. Please wait a few seconds and try again.';
+      } else {
+        message = `Google Sign-In failed (${status || 'network error'}). Please try again.`;
+      }
       return { success: false, message };
     }
   };
