@@ -12,4 +12,20 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'es2018',
+    sourcemap: false,
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+          motion: ['framer-motion'],
+          icons: ['lucide-react'],
+          utils: ['axios', 'canvas-confetti', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
+  },
 });

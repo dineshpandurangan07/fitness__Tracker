@@ -15,7 +15,10 @@ const QuickAuthGateModal = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
-  const googleConfigured = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  const googleConfigured = Boolean(
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+      '853179439869-ajf7rk0r8ddj4f56uplu1j2jc2imk782.apps.googleusercontent.com'
+  );
   const displayError = error.includes('Configure a valid MONGO_URI')
     ? 'Fast login is temporarily unavailable. Please configure MongoDB in Vercel.'
     : error;

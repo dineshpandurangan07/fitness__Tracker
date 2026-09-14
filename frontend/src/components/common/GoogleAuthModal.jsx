@@ -12,7 +12,10 @@ const GoogleAuthModal = ({ isOpen, onClose, onSuccess }) => {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const googleConfigured = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  const googleConfigured = Boolean(
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+      '853179439869-ajf7rk0r8ddj4f56uplu1j2jc2imk782.apps.googleusercontent.com'
+  );
 
   // Real Google OAuth — triggers the native Google account picker popup
   const triggerGoogleLogin = useGoogleLogin({

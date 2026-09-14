@@ -1,23 +1,28 @@
-const { initializeApp } = require('../backend/server');
+const { app, initializeApp } = require('../backend/server');
 
-let appPromise;
+let appReady = null;
 
 module.exports = async (req, res) => {
-  const app = require('../backend/server').app;
-
-  if (req.url === '/api/health' || req.url.startsWith('/api/health?')) {
+  // Health check should never require a DB connection
+  if (req.url === '/api/health' || (req.url && req.url.startsWith('/api/health?'))) {
     return app(req, res);
   }
 
+  if (!appReady) {
+    appReady = initializeApp().catch((error) => {
+      console.error('Vercel API initialization failed:', error.message);
+      appReady = null;
+      throw error;
+    });
+  }
+
   try {
-    appPromise ||= initializeApp();
-    await appPromise;
+    await appReady;
     return app(req, res);
   } catch (error) {
-    console.error('Vercel API initialization failed:', error.message);
     return res.status(503).json({
       success: false,
-      message: 'API is unavailable. Configure a valid MONGO_URI in Vercel.',
+      message: 'API is temporarily unavailable. Please check that MONGO_URI is configured in Vercel.',
     });
   }
 };

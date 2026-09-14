@@ -140,53 +140,36 @@ const googleAuth = async (req, res, next) => {
 
     // If an accessToken is provided, verify it with Google's userinfo endpoint
     if (accessToken) {
-      try {
-        const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
-        const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-
-        if (!googleRes.ok) {
-          return res.status(401).json({ success: false, message: 'Invalid Google access token. Please sign in again.' });
-        }
-
-        const profile = await googleRes.json();
-        verifiedEmail = profile.email;
-        verifiedName = profile.name;
-        verifiedGoogleId = profile.sub;
-        verifiedPicture = profile.picture || '';
-      } catch (fetchErr) {
-        // Fallback: use provided fields if fetch module unavailable
-        // (node-fetch may not be installed; we use native https instead)
-        const https = require('https');
-        const profileData = await new Promise((resolve, reject) => {
-          const options = {
+      const https = require('https');
+      const profileData = await new Promise((resolve, reject) => {
+        const request = https.request(
+          {
             hostname: 'www.googleapis.com',
             path: '/oauth2/v3/userinfo',
             method: 'GET',
             headers: { Authorization: `Bearer ${accessToken}` },
-          };
-          const request = https.request(options, (response) => {
+          },
+          (response) => {
             let data = '';
             response.on('data', (chunk) => { data += chunk; });
             response.on('end', () => {
               try { resolve(JSON.parse(data)); }
               catch { reject(new Error('Failed to parse Google response')); }
             });
-          });
-          request.on('error', reject);
-          request.end();
-        });
+          }
+        );
+        request.on('error', reject);
+        request.end();
+      });
 
-        if (profileData.error) {
-          return res.status(401).json({ success: false, message: 'Google token verification failed.' });
-        }
-
-        verifiedEmail = profileData.email;
-        verifiedName = profileData.name;
-        verifiedGoogleId = profileData.sub;
-        verifiedPicture = profileData.picture || '';
+      if (profileData.error) {
+        return res.status(401).json({ success: false, message: 'Google token verification failed.' });
       }
+
+      verifiedEmail = profileData.email;
+      verifiedName = profileData.name;
+      verifiedGoogleId = profileData.sub;
+      verifiedPicture = profileData.picture || '';
     }
 
     if (!verifiedEmail) {
