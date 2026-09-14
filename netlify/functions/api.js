@@ -12,14 +12,18 @@ const wrapped = serverless(app);
 
 function normalizePath(p) {
   if (!p) return p;
+  // When the frontend calls /.netlify/functions/api/... directly, strip the
+  // function prefix so Express sees /api/... (the path its routers expect).
+  const fnPrefix = '/.netlify/functions/api';
+  if (p.startsWith(fnPrefix)) {
+    return '/api' + p.slice(fnPrefix.length);
+  }
+  // When a rewrite brings a path like /auth/google, add the /api prefix.
   return p.startsWith('/api') ? p : '/api' + (p === '/' ? '' : p);
 }
 
 exports.handler = async (event, context) => {
-  const normalized = normalizePath(event.path);
-  if (normalized !== event.path) {
-    event.path = normalized;
-  }
+  event.path = normalizePath(event.path);
   try {
     return await wrapped(event, context);
   } catch (error) {
