@@ -72,13 +72,16 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: |
-          echo "== who is this token =="
-          curl -s -m 20 -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" https://api.netlify.com/api/v1/user | head -c 500
+          SITE=5474b72e-780d-40a9-bfae-ae7249d38f96
+          echo "== accounts/teams for token =="
+          curl -s -m 20 -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" https://api.netlify.com/api/v1/accounts | head -c 800
           echo
-          echo "== site access =="
-          curl -s -m 20 -o /dev/null -w "site lookup HTTP %{http_code}\n" \
-            -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
-            https://api.netlify.com/api/v1/sites/5474b72e-780d-40a9-bfae-ae7249d38f96
+          echo "== site owner info =="
+          curl -s -m 20 -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" https://api.netlify.com/api/v1/sites/$SITE | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);console.log(JSON.stringify({id:j.id,account_slug:j.account_slug,admin_url:j.admin_url,site_url:j.site_url,state:j.state,build_settings:j.build_settings}))})" 2>/dev/null || echo "(parse failed)"
+          echo "== try creating a deploy (should be 201 or 4xx) =="
+          curl -s -m 20 -X POST -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" -H "Content-Type: application/json" \
+            -d '{"title":"diagnostic deploy"}' \
+            https://api.netlify.com/api/v1/sites/$SITE/deploys | head -c 600
 
       - name: Deploy backend to Netlify
         if: env.NETLIFY_AUTH_TOKEN != ''
