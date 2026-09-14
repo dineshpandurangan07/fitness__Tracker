@@ -2,6 +2,14 @@ const mongoose = require('mongoose');
 
 let mongod = null;
 
+// Redact any credentials that might appear inside a connection error message
+// (e.g. a full mongodb://user:pass@host URI) before surfacing it in /health.
+const sanitize = (msg = '') =>
+  String(msg).replace(/\/\/[^@\s]+@/g, '//***@');
+
+const connectDB = async () => {
+  connectDB.lastError = null;
+
 const connectDB = async () => {
   mongoose.set('strictQuery', false);
   mongoose.set('bufferCommands', false);
@@ -30,7 +38,8 @@ const connectDB = async () => {
       console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
       return;
     } catch (error) {
-      console.warn(`MongoDB connection to configured URI failed: ${error.message}`);
+      connectDB.lastError = sanitize(error.message);
+      console.warn(`MongoDB connection to configured URI failed: ${connectDB.lastError}`);
       if (!memoryAllowed) throw error;
       console.log('Falling back to in-memory MongoDB (local development only).');
     }
@@ -44,10 +53,11 @@ const connectDB = async () => {
     const memoryUri = mongod.getUri();
     const conn = await mongoose.connect(memoryUri, { maxPoolSize: 10 });
     console.log(`In-Memory MongoDB Connected successfully: ${memoryUri}`);
-  } catch (memErr) {
-    console.error('Failed to initialize In-Memory MongoDB:', memErr.message);
-    throw memErr;
-  }
+} catch (memErr) {
+      connectDB.lastError = sanitize(memErr.message);
+      console.error('Failed to initialize In-Memory MongoDB:', connectDB.lastError);
+      throw memErr;
+    }
 };
 
 module.exports = connectDB;

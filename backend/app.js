@@ -46,16 +46,18 @@ app.use(express.urlencoded({ extended: true }));
 // Health check endpoint. `env` only reports the presence of each variable
 // (never its value) so we can diagnose deployment problems instantly.
 app.get('/api/health', (req, res) => {
+  const dbConnected = mongoose.connection.readyState === 1;
   res.json({
     status: 'ok',
     api: 'fitness-tracker',
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    db: dbConnected ? 'connected' : 'disconnected',
     env: {
       mongoUri: Boolean(process.env.MONGO_URI),
       jwtSecret: Boolean(process.env.JWT_SECRET),
       nodeEnv: process.env.NODE_ENV || 'not-set',
       allowMemoryDb: process.env.ALLOW_MEMORY_DB === 'true',
     },
+    lastDbError: dbConnected ? null : (connectDB.lastError || null),
     timestamp: new Date().toISOString(),
   });
 });
